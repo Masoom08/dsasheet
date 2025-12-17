@@ -5,11 +5,27 @@ export default function Home() {
   const [questions, setQuestions] = useState([]);
   const [openWeeks, setOpenWeeks] = useState({}); // store which weeks are open
 
+  // useEffect(() => {
+  //   fetch("/api/questions")
+  //     .then((res) => res.json())
+  //     .then(setQuestions);
+  // }, []);
+
   useEffect(() => {
-    fetch("/api/questions")
-      .then((res) => res.json())
-      .then(setQuestions);
-  }, []);
+  fetch("/api/questions")
+    .then(async (res) => {
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text);
+      }
+      return res.json();
+    })
+    .then(setQuestions)
+    .catch((err) => {
+      console.error("API ERROR:", err);
+    });
+}, []);
+
 
   const toggleStatus = async (id, currentStatus) => {
     try {
@@ -22,7 +38,7 @@ export default function Home() {
       });
 
       setQuestions((prev) =>
-        prev.map((q) => (q.id === id ? { ...q, status: newStatus } : q))
+        prev.map((q) => (q._id === id ? { ...q, status: newStatus } : q))
       );
     } catch (error) {
       console.error("Failed to update status:", error);
@@ -91,7 +107,7 @@ export default function Home() {
               <tbody>
                 {weekQuestions.map((q) => (
                   <tr
-                    key={q.id}
+                    key={q._id}
                     className="border-b border-gray-700 hover:bg-gray-700 transition-colors"
                   >
                     <td className="p-3">{q.topic}</td>
@@ -118,7 +134,7 @@ export default function Home() {
                       <input
                         type="checkbox"
                         checked={q.status}
-                        onChange={() => toggleStatus(q.id, q.status)}
+                        onChange={() => toggleStatus(q._id, q.status)}
                         className="w-5 h-5 accent-blue-500"
                       />
                     </td>
